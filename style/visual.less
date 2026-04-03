@@ -316,6 +316,28 @@
         }
     }
 
+    // ── Spinner ──────────────────────────────────────────────
+    .wv-spinner {
+        width: 36px;
+        height: 36px;
+        border: 3px solid rgba(255,255,255,0.25);
+        border-top-color: rgba(255,255,255,0.85);
+        border-radius: 50%;
+        animation: wv-spin 0.8s linear infinite;
+    }
+
+    @keyframes wv-spin {
+        to { transform: rotate(360deg); }
+    }
+
+    // ── Daily row precipitation badge ─────────────────────────
+    .wv-day-precip {
+        font-size: calc(var(--wv-label-font-size, 13px) - 1px);
+        opacity: 0.65;
+        margin-right: 8px;
+        flex-shrink: 0;
+    }
+
     // ── No data placeholder ──────────────────────────────────
     .wv-no-data {
         display: flex;

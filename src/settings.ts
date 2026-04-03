@@ -3,15 +3,19 @@
 import { dataViewObjectsParser } from "powerbi-visuals-utils-dataviewutils";
 import DataViewObjectsParser = dataViewObjectsParser.DataViewObjectsParser;
 
+export class LocationSettings {
+    public cityName: string = "London";
+}
+
 export class DisplaySettings {
     public viewMode: string = "hourly";
-    public temperatureUnit: string = "F";
+    public temperatureUnit: string = "C";
     public hoursToShow: number = 6;
     public daysToShow: number = 7;
     public showLocation: boolean = true;
     public showDate: boolean = true;
     public showHighLow: boolean = true;
-    public showPrecipitation: boolean = false;
+    public showPrecipitation: boolean = true;
     public showHumidity: boolean = false;
     public showWindSpeed: boolean = false;
 }
@@ -45,6 +49,7 @@ export class FontSettings {
 }
 
 export class VisualSettings extends DataViewObjectsParser {
+    public locationSettings: LocationSettings = new LocationSettings();
     public displaySettings: DisplaySettings = new DisplaySettings();
     public colorSettings: ColorSettings = new ColorSettings();
     public iconSettings: IconSettings = new IconSettings();

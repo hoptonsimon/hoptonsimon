@@ -1,89 +1,23 @@
 {
-  "dataRoles": [
-    {
+  "dataRoles": [],
+  "dataViewMappings": [],
+  "objects": {
+    "locationSettings": {
       "displayName": "Location",
-      "name": "location",
-      "kind": "GroupingOrMeasure",
-      "description": "City or location name (e.g. San Francisco)"
-    },
-    {
-      "displayName": "Date / Time",
-      "name": "dateTime",
-      "kind": "GroupingOrMeasure",
-      "description": "Date or datetime for each weather entry"
-    },
-    {
-      "displayName": "Temperature",
-      "name": "temperature",
-      "kind": "Measure",
-      "description": "Current temperature reading"
-    },
-    {
-      "displayName": "High Temperature",
-      "name": "highTemp",
-      "kind": "Measure",
-      "description": "Daily high temperature"
-    },
-    {
-      "displayName": "Low Temperature",
-      "name": "lowTemp",
-      "kind": "Measure",
-      "description": "Daily low temperature"
-    },
-    {
-      "displayName": "Weather Condition",
-      "name": "condition",
-      "kind": "GroupingOrMeasure",
-      "description": "Weather condition text (e.g. Sunny, Cloudy, Rainy)"
-    },
-    {
-      "displayName": "Precipitation (%)",
-      "name": "precipitation",
-      "kind": "Measure",
-      "description": "Chance of precipitation as a percentage"
-    },
-    {
-      "displayName": "Humidity (%)",
-      "name": "humidity",
-      "kind": "Measure",
-      "description": "Relative humidity percentage"
-    },
-    {
-      "displayName": "Wind Speed",
-      "name": "windSpeed",
-      "kind": "Measure",
-      "description": "Wind speed (mph or km/h depending on unit setting)"
-    }
-  ],
-  "dataViewMappings": [
-    {
-      "table": {
-        "rows": {
-          "select": [
-            { "for": { "in": "location" } },
-            { "for": { "in": "dateTime" } },
-            { "for": { "in": "temperature" } },
-            { "for": { "in": "highTemp" } },
-            { "for": { "in": "lowTemp" } },
-            { "for": { "in": "condition" } },
-            { "for": { "in": "precipitation" } },
-            { "for": { "in": "humidity" } },
-            { "for": { "in": "windSpeed" } }
-          ],
-          "dataReductionAlgorithm": {
-            "top": { "count": 168 }
-          }
+      "properties": {
+        "cityName": {
+          "displayName": "City Name",
+          "description": "Type any city name — e.g. London, Dublin, Manchester, Paris",
+          "type": { "text": true }
         }
       }
-    }
-  ],
-  "objects": {
+    },
     "displaySettings": {
       "displayName": "Display",
       "properties": {
         "viewMode": {
           "displayName": "View Mode",
-          "description": "Choose hourly (single day) or daily (week) view",
+          "description": "Hourly (today) or Daily (7-day forecast)",
           "type": {
             "enumeration": [
               { "displayName": "Hourly", "value": "hourly" },
@@ -95,8 +29,8 @@
           "displayName": "Temperature Unit",
           "type": {
             "enumeration": [
-              { "displayName": "Fahrenheit (°F)", "value": "F" },
-              { "displayName": "Celsius (°C)", "value": "C" }
+              { "displayName": "Celsius (°C)", "value": "C" },
+              { "displayName": "Fahrenheit (°F)", "value": "F" }
             ]
           }
         },
@@ -107,7 +41,7 @@
         },
         "daysToShow": {
           "displayName": "Days to Show",
-          "description": "Number of days shown in daily view (2–14)",
+          "description": "Number of days shown in daily view (2–7)",
           "type": { "numeric": true }
         },
         "showLocation": {
@@ -193,7 +127,6 @@
         },
         "iconSet": {
           "displayName": "Icon Style",
-          "description": "Choose the visual style of weather icons",
           "type": {
             "enumeration": [
               { "displayName": "Colorful", "value": "colorful" },
@@ -257,7 +190,16 @@
       }
     }
   },
-  "privileges": [],
+  "privileges": [
+    {
+      "name": "WebAccess",
+      "essential": true,
+      "parameters": [
+        "https://api.open-meteo.com",
+        "https://geocoding-api.open-meteo.com"
+      ]
+    }
+  ],
   "supportsHighlight": false,
   "suppressDefaultTitle": true
 }

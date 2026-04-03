@@ -7,6 +7,7 @@ import {
     getPrecipitationIcon,
     getHumidityIcon,
     getWindIcon,
+    getPressureIcon,
     IconStyle,
     IconColors,
 } from "./weatherIcons";
@@ -30,7 +31,6 @@ interface GeoResult {
 interface WeatherData {
     location: string;
     country: string;
-    timezone: string;
     current: {
         temperature: number;
         windspeed: number;
@@ -44,6 +44,7 @@ interface WeatherData {
         weathercode: number[];
         windspeed: number[];
         relativehumidity: number[];
+        surface_pressure: number[];
     };
     daily: {
         time: string[];
@@ -54,39 +55,37 @@ interface WeatherData {
     };
 }
 
-// ── WMO weather code → condition string ──────────────────────────────────────
+// ── WMO weather-code helpers ──────────────────────────────────────────────────
 
 function wmoCondition(code: number): string {
-    if (code === 0)              return "Clear Sky";
-    if (code === 1)              return "Mainly Clear";
-    if (code === 2)              return "Partly Cloudy";
-    if (code === 3)              return "Overcast";
-    if (code === 45 || code === 48) return "Fog";
-    if (code >= 51 && code <= 55)   return "Drizzle";
-    if (code >= 56 && code <= 57)   return "Freezing Drizzle";
-    if (code >= 61 && code <= 65)   return "Rain";
-    if (code >= 66 && code <= 67)   return "Freezing Rain";
-    if (code >= 71 && code <= 77)   return "Snow";
-    if (code >= 80 && code <= 82)   return "Rain Showers";
-    if (code >= 85 && code <= 86)   return "Snow Showers";
-    if (code === 95)                return "Thunderstorm";
-    if (code >= 96)                 return "Thunderstorm";
+    if (code === 0)                  return "Clear Sky";
+    if (code === 1)                  return "Mainly Clear";
+    if (code === 2)                  return "Partly Cloudy";
+    if (code === 3)                  return "Overcast";
+    if (code === 45 || code === 48)  return "Fog";
+    if (code >= 51 && code <= 55)    return "Drizzle";
+    if (code >= 56 && code <= 57)    return "Freezing Drizzle";
+    if (code >= 61 && code <= 65)    return "Rain";
+    if (code >= 66 && code <= 67)    return "Freezing Rain";
+    if (code >= 71 && code <= 77)    return "Snow";
+    if (code >= 80 && code <= 82)    return "Rain Showers";
+    if (code >= 85 && code <= 86)    return "Snow Showers";
+    if (code >= 95)                  return "Thunderstorm";
     return "Cloudy";
 }
 
-// Map WMO condition string to icon condition key used by weatherIcons.ts
 function wmoToIconKey(code: number): string {
-    if (code === 0)              return "Sunny";
-    if (code === 1)              return "Mainly Clear";
-    if (code === 2)              return "Partly Cloudy";
-    if (code === 3)              return "Overcast";
-    if (code === 45 || code === 48) return "Fog";
-    if (code >= 51 && code <= 57)   return "Drizzle";
-    if (code >= 61 && code <= 67)   return "Rain";
-    if (code >= 71 && code <= 77)   return "Snow";
-    if (code >= 80 && code <= 82)   return "Rain";
-    if (code >= 85 && code <= 86)   return "Snow";
-    if (code >= 95)                 return "Thunderstorm";
+    if (code === 0)                  return "Sunny";
+    if (code === 1)                  return "Mainly Clear";
+    if (code === 2)                  return "Partly Cloudy";
+    if (code === 3)                  return "Overcast";
+    if (code === 45 || code === 48)  return "Fog";
+    if (code >= 51 && code <= 57)    return "Drizzle";
+    if (code >= 61 && code <= 67)    return "Rain";
+    if (code >= 71 && code <= 77)    return "Snow";
+    if (code >= 80 && code <= 82)    return "Rain";
+    if (code >= 85 && code <= 86)    return "Snow";
+    if (code >= 95)                  return "Thunderstorm";
     return "Cloudy";
 }
 
@@ -99,7 +98,7 @@ interface CacheEntry {
     fetchedAt: number;
 }
 
-const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
+const CACHE_TTL_MS = 30 * 60 * 1000;
 
 // ── Main Visual Class ─────────────────────────────────────────────────────────
 
@@ -111,8 +110,8 @@ export class WeatherVisual implements IVisual {
     constructor(options: VisualConstructorOptions) {
         this.target = options.element;
         this.target.style.overflow = "hidden";
-        this.target.style.width = "100%";
-        this.target.style.height = "100%";
+        this.target.style.width    = "100%";
+        this.target.style.height   = "100%";
     }
 
     public update(options: VisualUpdateOptions): void {
@@ -126,12 +125,11 @@ export class WeatherVisual implements IVisual {
     // ── Fetch + render pipeline ───────────────────────────────────────────────
 
     private async loadAndRender(): Promise<void> {
-        const city = (this.settings.locationSettings.cityName || "London").trim();
-        const unit = this.settings.displaySettings.temperatureUnit;
+        const city    = (this.settings.locationSettings.cityName || "London").trim();
+        const unit    = this.settings.displaySettings.temperatureUnit;
         const cacheKey = city.toLowerCase();
-        const now = Date.now();
+        const now     = Date.now();
 
-        // Use cached data if still fresh and same city+unit
         if (
             this.cache &&
             this.cache.cityKey === cacheKey &&
@@ -142,38 +140,39 @@ export class WeatherVisual implements IVisual {
             return;
         }
 
-        this.renderLoading(city);
+        // Show cached data instantly while refetching
+        if (this.cache && this.cache.cityKey === cacheKey) {
+            this.render(this.cache.data);
+        } else {
+            this.renderLoading(city);
+        }
 
         try {
             const data = await this.fetchWeather(city, unit);
-            this.cache = { cityKey: cacheKey, unit, data, fetchedAt: now };
+            this.cache = { cityKey: cacheKey, unit, data, fetchedAt: Date.now() };
             this.render(data);
         } catch (err) {
-            this.renderError(String(err));
+            if (!this.cache) this.renderError(String(err));
         }
     }
 
-    // ── Open-Meteo API calls ──────────────────────────────────────────────────
+    // ── Open-Meteo API ────────────────────────────────────────────────────────
 
     private async fetchWeather(city: string, unit: string): Promise<WeatherData> {
-        // Step 1: Geocode the city name
         const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=3&language=en&format=json`;
         const geoResp = await fetch(geoUrl);
         if (!geoResp.ok) throw new Error(`Geocoding failed (${geoResp.status})`);
         const geoJson = await geoResp.json();
-
         if (!geoJson.results || geoJson.results.length === 0) {
             throw new Error(`City not found: "${city}"`);
         }
         const geo: GeoResult = geoJson.results[0];
 
-        // Step 2: Fetch forecast
         const tempUnit = unit === "C" ? "celsius" : "fahrenheit";
         const wxUrl = [
             `https://api.open-meteo.com/v1/forecast`,
-            `?latitude=${geo.latitude}`,
-            `&longitude=${geo.longitude}`,
-            `&hourly=temperature_2m,precipitation_probability,weathercode,windspeed_10m,relativehumidity_2m`,
+            `?latitude=${geo.latitude}&longitude=${geo.longitude}`,
+            `&hourly=temperature_2m,precipitation_probability,weathercode,windspeed_10m,relativehumidity_2m,surface_pressure`,
             `&daily=temperature_2m_max,temperature_2m_min,weathercode,precipitation_probability_max`,
             `&current_weather=true`,
             `&timezone=auto`,
@@ -188,8 +187,7 @@ export class WeatherVisual implements IVisual {
 
         return {
             location: geo.name,
-            country: geo.country,
-            timezone: wx.timezone,
+            country:  geo.country,
             current: {
                 temperature: Math.round(wx.current_weather.temperature),
                 windspeed:   Math.round(wx.current_weather.windspeed),
@@ -197,18 +195,19 @@ export class WeatherVisual implements IVisual {
                 time:        wx.current_weather.time,
             },
             hourly: {
-                time:                     wx.hourly.time,
-                temperature:              wx.hourly.temperature_2m.map(Math.round),
+                time:                      wx.hourly.time,
+                temperature:               wx.hourly.temperature_2m.map(Math.round),
                 precipitation_probability: wx.hourly.precipitation_probability,
-                weathercode:              wx.hourly.weathercode,
-                windspeed:                wx.hourly.windspeed_10m.map(Math.round),
-                relativehumidity:         wx.hourly.relativehumidity_2m,
+                weathercode:               wx.hourly.weathercode,
+                windspeed:                 wx.hourly.windspeed_10m.map(Math.round),
+                relativehumidity:          wx.hourly.relativehumidity_2m,
+                surface_pressure:          wx.hourly.surface_pressure.map(Math.round),
             },
             daily: {
-                time:                        wx.daily.time,
-                temperature_max:             wx.daily.temperature_2m_max.map(Math.round),
-                temperature_min:             wx.daily.temperature_2m_min.map(Math.round),
-                weathercode:                 wx.daily.weathercode,
+                time:                          wx.daily.time,
+                temperature_max:               wx.daily.temperature_2m_max.map(Math.round),
+                temperature_min:               wx.daily.temperature_2m_min.map(Math.round),
+                weathercode:                   wx.daily.weathercode,
                 precipitation_probability_max: wx.daily.precipitation_probability_max,
             },
         };
@@ -235,43 +234,44 @@ export class WeatherVisual implements IVisual {
         el.style.setProperty("--wv-bg-rgb",             this.hexToRgb(cs.backgroundColor));
     }
 
-    // ── Render: loading state ─────────────────────────────────────────────────
+    // ── Loading state ─────────────────────────────────────────────────────────
 
     private renderLoading(city: string): void {
-        const s = this.settings.colorSettings;
+        const styleClass = `style-${this.settings.colorSettings.cardStyle}`;
         this.setHTML(this.target, `
         <div class="weatherVisualRoot">
-            <div class="wv-card style-${s.cardStyle}">
+            <div class="wv-card ${styleClass}">
                 <div class="wv-no-data">
                     <div class="wv-spinner"></div>
-                    <div>Loading weather for ${this.esc(city)}…</div>
+                    <div>Loading ${this.esc(city)}…</div>
                 </div>
             </div>
         </div>`);
     }
 
-    // ── Render: error state ───────────────────────────────────────────────────
+    // ── Error state ───────────────────────────────────────────────────────────
 
-    private renderError(message: string): void {
-        const s = this.settings.colorSettings;
+    private renderError(msg: string): void {
+        const styleClass = `style-${this.settings.colorSettings.cardStyle}`;
         this.setHTML(this.target, `
         <div class="weatherVisualRoot">
-            <div class="wv-card style-${s.cardStyle}">
+            <div class="wv-card ${styleClass}">
                 <div class="wv-no-data">
-                    <div style="font-size:28px">⚠</div>
-                    <div>${this.esc(message)}</div>
-                    <div style="font-size:11px;opacity:0.6">Check the city name in the Format pane → Location</div>
+                    <div style="font-size:26px;opacity:0.7">⚠</div>
+                    <div>${this.esc(msg)}</div>
+                    <div class="wv-no-data-sub">Check the city name in Format pane → Location</div>
                 </div>
             </div>
         </div>`);
     }
 
-    // ── Render: main card ─────────────────────────────────────────────────────
+    // ── Main render ───────────────────────────────────────────────────────────
 
     private render(data: WeatherData): void {
-        const ds = this.settings.displaySettings;
-        const cs = this.settings.colorSettings;
-        const is = this.settings.iconSettings;
+        const ds  = this.settings.displaySettings;
+        const cs  = this.settings.colorSettings;
+        const is  = this.settings.iconSettings;
+        const fs  = this.settings.fontSettings;
 
         const iconColors: IconColors = {
             sun:   is.sunColor,
@@ -279,44 +279,27 @@ export class WeatherVisual implements IVisual {
             rain:  is.rainColor,
             text:  cs.textColor,
         };
-        const iconStyle    = is.iconSet as IconStyle;
+        const iconStyle     = is.iconSet as IconStyle;
         const iconSizeClass = `size-${is.iconSize}`;
         const unit          = ds.temperatureUnit;
         const unitLabel     = `°${unit}`;
+        const styleClass    = `style-${cs.cardStyle}`;
 
-        // Find the nearest hourly slot to now
-        const nowStr   = new Date().toISOString().slice(0, 13); // "YYYY-MM-DDTHH"
-        let nowIdx     = data.hourly.time.findIndex(t => t.startsWith(nowStr));
+        // Find hourly index closest to now
+        const nowHour  = new Date().toISOString().slice(0, 13);
+        let nowIdx     = data.hourly.time.findIndex(t => t.slice(0, 13) === nowHour);
         if (nowIdx < 0) nowIdx = 0;
-
-        const currentCode  = data.current.weathercode;
-        const currentCond  = wmoCondition(currentCode);
-        const currentTemp  = data.current.temperature;
-        const todayHigh    = data.daily.temperature_max[0];
-        const todayLow     = data.daily.temperature_min[0];
-        const currentPrecip = data.hourly.precipitation_probability[nowIdx];
-        const currentHumidity = data.hourly.relativehumidity[nowIdx];
-        const currentWind  = data.current.windspeed;
-
-        const currentIconSvg = is.showIcons
-            ? getWeatherIcon(wmoToIconKey(currentCode), iconStyle, iconColors)
-            : "";
-
-        const styleClass = `style-${cs.cardStyle}`;
-        const dateLabel  = this.formatDate(new Date());
-        const locLabel   = `${data.location}, ${data.country}`;
 
         const html = `
         <div class="weatherVisualRoot">
             <div class="wv-card ${styleClass}">
-                ${this.renderHeader(locLabel, dateLabel, ds)}
-                ${this.renderCurrentBlock(currentTemp, currentCond, todayHigh, todayLow, currentIconSvg, iconSizeClass, unitLabel, ds)}
-                ${this.renderDetails(currentPrecip, currentHumidity, currentWind, ds, iconColors)}
+                ${this.buildHeader(data, ds)}
+                ${this.buildMain(data, nowIdx, ds, is, iconColors, iconStyle, iconSizeClass, unitLabel)}
                 <div class="wv-divider"></div>
-                ${this.renderTabBar(ds.viewMode)}
+                ${this.buildTabBar(ds.viewMode)}
                 ${ds.viewMode === "daily"
-                    ? this.renderDailyView(data, ds, is, iconColors, iconStyle, iconSizeClass, unitLabel)
-                    : this.renderHourlyView(data, ds, is, iconColors, iconStyle, iconSizeClass, unitLabel, nowIdx)
+                    ? this.buildDailyView(data, ds, is, iconColors, iconStyle, iconSizeClass, unitLabel)
+                    : this.buildHourlyView(data, ds, is, iconColors, iconStyle, iconSizeClass, unitLabel, nowIdx)
                 }
             </div>
         </div>`;
@@ -326,78 +309,98 @@ export class WeatherVisual implements IVisual {
 
     // ── Header ────────────────────────────────────────────────────────────────
 
-    private renderHeader(location: string, dateLabel: string, ds: any): string {
-        const locPart  = ds.showLocation ? `<div class="wv-location">${this.esc(location)}</div>` : "";
-        const datePart = ds.showDate     ? `<div class="wv-date">${this.esc(dateLabel)}</div>` : "";
+    private buildHeader(data: WeatherData, ds: any): string {
+        const dateStr = this.formatDate(new Date());
+        const locStr  = `${data.location}, ${data.country}`;
+        const pinSvg  = this.pinIconSvg(this.settings.colorSettings.textColor);
+
         return `
         <div class="wv-header">
-            <div class="wv-location-block">${locPart}${datePart}</div>
-            <div class="wv-settings-dot"></div>
+            ${ds.showDate
+                ? `<div class="wv-date">${this.esc(dateStr)}</div>`
+                : `<div></div>`}
+            ${ds.showLocation
+                ? `<div class="wv-location-pill">
+                      <div class="wv-pin-icon">${pinSvg}</div>
+                      <span>${this.esc(locStr)}</span>
+                   </div>`
+                : ``}
         </div>`;
     }
 
-    // ── Current conditions block ──────────────────────────────────────────────
+    // ── Main conditions block ─────────────────────────────────────────────────
 
-    private renderCurrentBlock(
-        temp: number,
-        condition: string,
-        high: number,
-        low: number,
-        iconSvg: string,
+    private buildMain(
+        data: WeatherData,
+        nowIdx: number,
+        ds: any, is: any,
+        iconColors: IconColors,
+        iconStyle: IconStyle,
         iconSizeClass: string,
-        unitLabel: string,
-        ds: any
+        unitLabel: string
     ): string {
-        const highLowHtml = ds.showHighLow ? `
-            <div class="wv-high-low">
-                <span class="wv-high">${high}${unitLabel}</span>
-                <span class="wv-low">${low}${unitLabel}</span>
-            </div>` : "";
+        const code      = data.current.weathercode;
+        const cond      = wmoCondition(code);
+        const temp      = data.current.temperature;
+        const high      = data.daily.temperature_max[0];
+        const low       = data.daily.temperature_min[0];
+        const wind      = data.current.windspeed;
+        const humidity  = Math.round(data.hourly.relativehumidity[nowIdx] ?? 0);
+        const pressure  = Math.round(data.hourly.surface_pressure[nowIdx] ?? 0);
+
+        const mainIconSvg = is.showIcons
+            ? getWeatherIcon(wmoToIconKey(code), iconStyle, iconColors) : "";
+
+        const highLow = ds.showHighLow ? `
+        <div class="wv-high-low-col">
+            <div class="wv-temp-row">
+                <span class="wv-arrow-up">↑</span>
+                <span class="wv-hl-val">${high}${unitLabel}</span>
+            </div>
+            <div class="wv-temp-row">
+                <span class="wv-arrow-down">↓</span>
+                <span class="wv-hl-val">${low}${unitLabel}</span>
+            </div>
+        </div>` : "";
+
+        // Stats column: always show available data (wind, humidity, pressure)
+        const statsItems: string[] = [];
+        if (ds.showWindSpeed) {
+            statsItems.push(`<div class="wv-stat">
+                <div class="wv-stat-icon">${getWindIcon(iconColors.text)}</div>
+                <span>${wind} mph</span>
+            </div>`);
+        }
+        if (ds.showHumidity) {
+            statsItems.push(`<div class="wv-stat">
+                <div class="wv-stat-icon">${getHumidityIcon(iconColors.text)}</div>
+                <span>${humidity}%</span>
+            </div>`);
+        }
+        if (ds.showPrecipitation && pressure > 0) {
+            statsItems.push(`<div class="wv-stat">
+                <div class="wv-stat-icon">${getPressureIcon(iconColors.text)}</div>
+                <span>${pressure} hPa</span>
+            </div>`);
+        }
+        const statsCol = statsItems.length
+            ? `<div class="wv-stats-col">${statsItems.join("")}</div>` : "";
 
         return `
-        <div class="wv-current">
-            ${iconSvg ? `<div class="wv-current-icon ${iconSizeClass}">${iconSvg}</div>` : ""}
-            <div class="wv-current-info">
-                <div class="wv-condition-label">${this.esc(condition)}</div>
-                <div class="wv-current-temp">
-                    ${temp}<span class="wv-temp-unit">${unitLabel}</span>
-                </div>
-                ${highLowHtml}
+        <div class="wv-main">
+            ${mainIconSvg ? `<div class="wv-main-icon ${iconSizeClass}">${mainIconSvg}</div>` : ""}
+            <div class="wv-main-temp-block">
+                <div class="wv-temp-large">${temp}<span class="wv-temp-unit">${unitLabel}</span></div>
+                <div class="wv-condition-text">${this.esc(cond)}</div>
             </div>
+            ${highLow}
+            ${statsCol}
         </div>`;
-    }
-
-    // ── Details row (precip / humidity / wind) ────────────────────────────────
-
-    private renderDetails(
-        precip: number | null,
-        humidity: number | null,
-        wind: number | null,
-        ds: any,
-        iconColors: IconColors
-    ): string {
-        const items: string[] = [];
-        if (ds.showPrecipitation && precip !== null) {
-            items.push(`<div class="wv-detail-item">
-                <div class="wv-detail-icon">${getPrecipitationIcon(iconColors.rain)}</div>
-                <span>${Math.round(precip)}%</span></div>`);
-        }
-        if (ds.showHumidity && humidity !== null) {
-            items.push(`<div class="wv-detail-item">
-                <div class="wv-detail-icon">${getHumidityIcon(iconColors.text)}</div>
-                <span>${Math.round(humidity)}%</span></div>`);
-        }
-        if (ds.showWindSpeed && wind !== null) {
-            items.push(`<div class="wv-detail-item">
-                <div class="wv-detail-icon">${getWindIcon(iconColors.text)}</div>
-                <span>${Math.round(wind)} mph</span></div>`);
-        }
-        return items.length ? `<div class="wv-details">${items.join("")}</div>` : "";
     }
 
     // ── Tab bar ───────────────────────────────────────────────────────────────
 
-    private renderTabBar(viewMode: string): string {
+    private buildTabBar(viewMode: string): string {
         return `
         <div class="wv-tab-bar">
             <span class="wv-tab ${viewMode === "hourly" ? "active" : ""}">Hourly</span>
@@ -407,7 +410,7 @@ export class WeatherVisual implements IVisual {
 
     // ── Hourly strip ──────────────────────────────────────────────────────────
 
-    private renderHourlyView(
+    private buildHourlyView(
         data: WeatherData,
         ds: any, is: any,
         iconColors: IconColors,
@@ -416,36 +419,35 @@ export class WeatherVisual implements IVisual {
         unitLabel: string,
         nowIdx: number
     ): string {
-        const limit = Math.min(Math.max(2, Math.round(ds.hoursToShow)), 12);
-        const slots = data.hourly.time
-            .slice(nowIdx, nowIdx + limit)
-            .map((t, i) => ({
-                time:   i === 0 ? "Now" : this.formatHour(t),
-                temp:   data.hourly.temperature[nowIdx + i],
-                code:   data.hourly.weathercode[nowIdx + i],
-                precip: data.hourly.precipitation_probability[nowIdx + i],
-            }));
+        const limit = Math.min(Math.max(2, Math.round(ds.hoursToShow)), 24);
+        const slots = data.hourly.time.slice(nowIdx, nowIdx + limit);
 
-        const html = slots.map((slot, i) => {
+        const html = slots.map((timeStr, i) => {
+            const idx    = nowIdx + i;
+            const code   = data.hourly.weathercode[idx];
+            const temp   = data.hourly.temperature[idx];
+            const precip = data.hourly.precipitation_probability[idx];
+            const label  = i === 0 ? "Now" : this.formatHour(timeStr);
             const iconSvg = is.showIcons
-                ? getWeatherIcon(wmoToIconKey(slot.code), iconStyle, iconColors) : "";
-            const precipHtml = ds.showPrecipitation && slot.precip != null
-                ? `<div class="wv-slot-precip">${slot.precip}%</div>` : "";
+                ? getWeatherIcon(wmoToIconKey(code), iconStyle, iconColors) : "";
+            const precipBadge = precip != null
+                ? `<div class="wv-hour-precip">${precip}%</div>` : "";
+
             return `
-            <div class="wv-forecast-item${i === 0 ? " current-slot" : ""}">
-                <div class="wv-slot-time">${slot.time}</div>
-                ${iconSvg ? `<div class="wv-slot-icon ${iconSizeClass}">${iconSvg}</div>` : ""}
-                <div class="wv-slot-temp">${slot.temp}${unitLabel}</div>
-                ${precipHtml}
+            <div class="wv-hour-slot${i === 0 ? " current-slot" : ""}">
+                <div class="wv-hour-time">${label}</div>
+                ${iconSvg ? `<div class="wv-hour-icon ${iconSizeClass}">${iconSvg}</div>` : ""}
+                <div class="wv-hour-temp">${temp}${unitLabel}</div>
+                ${precipBadge}
             </div>`;
         }).join("");
 
-        return `<div class="wv-forecast">${html}</div>`;
+        return `<div class="wv-hourly-wrap"><div class="wv-hourly-inner">${html}</div></div>`;
     }
 
-    // ── Daily rows ────────────────────────────────────────────────────────────
+    // ── Daily list ────────────────────────────────────────────────────────────
 
-    private renderDailyView(
+    private buildDailyView(
         data: WeatherData,
         ds: any, is: any,
         iconColors: IconColors,
@@ -454,70 +456,73 @@ export class WeatherVisual implements IVisual {
         unitLabel: string
     ): string {
         const limit = Math.min(Math.max(2, Math.round(ds.daysToShow)), 7);
+
         const html = data.daily.time.slice(0, limit).map((dateStr, i) => {
             const code   = data.daily.weathercode[i];
             const high   = data.daily.temperature_max[i];
             const low    = data.daily.temperature_min[i];
             const precip = data.daily.precipitation_probability_max[i];
             const cond   = wmoCondition(code);
+            const day    = i === 0 ? "Today" : this.formatDayName(dateStr);
             const iconSvg = is.showIcons
                 ? getWeatherIcon(wmoToIconKey(code), iconStyle, iconColors) : "";
-            const dayName = i === 0 ? "Today" : this.formatDayName(dateStr);
-            const highLow = ds.showHighLow ? `
-                <div class="wv-day-temps">
-                    <span class="wv-day-high">${high}${unitLabel}</span>
-                    <span class="wv-day-low">${low}${unitLabel}</span>
-                </div>` : "";
-            const precipBadge = ds.showPrecipitation && precip != null
-                ? `<span class="wv-day-precip">${precip}%</span>` : "";
 
             return `
             <div class="wv-daily-row">
-                <div class="wv-day-name">${dayName}</div>
+                <div class="wv-day-name">${day}</div>
                 ${iconSvg ? `<div class="wv-day-icon ${iconSizeClass}">${iconSvg}</div>` : ""}
                 <div class="wv-day-condition">${this.esc(cond)}</div>
-                ${precipBadge}
-                ${highLow}
+                ${ds.showPrecipitation && precip != null
+                    ? `<div class="wv-day-precip">${precip}%</div>` : ""}
+                ${ds.showHighLow ? `
+                <div class="wv-day-temps">
+                    <span class="wv-day-high">${high}${unitLabel}</span>
+                    <span class="wv-day-low">${low}${unitLabel}</span>
+                </div>` : ""}
             </div>`;
         }).join("");
 
-        return `<div class="wv-daily-list">${html}</div>`;
+        return `<div class="wv-daily-wrap">${html}</div>`;
     }
 
-    // ── Formatting helpers ────────────────────────────────────────────────────
+    // ── SVG helpers ───────────────────────────────────────────────────────────
+
+    private pinIconSvg(color: string): string {
+        return `<svg viewBox="0 0 24 24" width="100%" height="100%" fill="${color}">
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z
+                     m0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+        </svg>`;
+    }
+
+    // ── Date / time formatting (en-GB for UK style) ───────────────────────────
 
     private formatDate(d: Date): string {
         return d.toLocaleDateString("en-GB", {
-            weekday: "long", day: "numeric", month: "long", year: "numeric"
+            weekday: "long", day: "numeric", month: "long"
         });
     }
 
     private formatHour(isoStr: string): string {
-        // isoStr = "2024-04-03T14:00"
         const h = parseInt(isoStr.slice(11, 13), 10);
-        const ampm = h >= 12 ? "PM" : "AM";
-        return `${h % 12 || 12}${ampm}`;
+        return `${String(h).padStart(2, "0")}:00`;
     }
 
     private formatDayName(dateStr: string): string {
-        // dateStr = "2024-04-03"
-        const d = new Date(dateStr + "T12:00:00");
-        return d.toLocaleDateString("en-GB", { weekday: "short" });
+        return new Date(dateStr + "T12:00:00").toLocaleDateString("en-GB", { weekday: "short" });
     }
 
+    // ── Utility ───────────────────────────────────────────────────────────────
+
     private esc(s: string): string {
-        return (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        return (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                        .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
     }
 
     private hexToRgb(hex: string): string {
-        const c = hex.replace("#", "");
-        const full = c.length === 3
-            ? c.split("").map(x => x + x).join("")
-            : c;
+        const c    = hex.replace("#", "");
+        const full = c.length === 3 ? c.split("").map(x => x + x).join("") : c;
         return [0, 2, 4].map(i => parseInt(full.slice(i, i + 2), 16)).join(",");
     }
-
-    // ── DOM helpers ───────────────────────────────────────────────────────────
 
     private clearElement(el: HTMLElement): void {
         while (el.firstChild) el.removeChild(el.firstChild);
@@ -525,9 +530,8 @@ export class WeatherVisual implements IVisual {
 
     private setHTML(el: HTMLElement, html: string): void {
         this.clearElement(el);
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, "text/html");
-        Array.from(doc.body.childNodes).forEach(node => el.appendChild(node));
+        const doc = new DOMParser().parseFromString(html, "text/html");
+        Array.from(doc.body.childNodes).forEach(n => el.appendChild(n));
     }
 
     // ── Power BI Format Pane ──────────────────────────────────────────────────

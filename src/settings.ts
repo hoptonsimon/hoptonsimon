@@ -10,26 +10,26 @@ export class LocationSettings {
 export class DisplaySettings {
     public viewMode: string = "hourly";
     public temperatureUnit: string = "C";
-    public hoursToShow: number = 6;
+    public hoursToShow: number = 12;
     public daysToShow: number = 7;
     public showLocation: boolean = true;
     public showDate: boolean = true;
     public showHighLow: boolean = true;
     public showPrecipitation: boolean = true;
-    public showHumidity: boolean = false;
-    public showWindSpeed: boolean = false;
+    public showHumidity: boolean = true;
+    public showWindSpeed: boolean = true;
 }
 
 export class ColorSettings {
-    public backgroundColor: string = "#3a5a8a";
-    public backgroundOpacity: number = 80;
+    public backgroundColor: string = "#1e2d14";
+    public backgroundOpacity: number = 12;
     public textColor: string = "#ffffff";
-    public accentColor: string = "rgba(255,255,255,0.35)";
+    public accentColor: string = "rgba(255,255,255,0.20)";
     public highlightColor: string = "#ffffff";
     public cardStyle: string = "glass";
-    public gradientStartColor: string = "#3a5a8a";
-    public gradientEndColor: string = "#7b4f9e";
-    public borderRadius: number = 16;
+    public gradientStartColor: string = "#2d4020";
+    public gradientEndColor: string = "#1a2818";
+    public borderRadius: number = 20;
 }
 
 export class IconSettings {

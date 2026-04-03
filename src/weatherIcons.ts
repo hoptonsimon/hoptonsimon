@@ -238,3 +238,15 @@ export function getWindIcon(color: string): string {
     return svg(`<path d="M8,28 Q24,18 40,28 Q48,34 56,28" stroke="${color}" stroke-width="2.5" fill="none" stroke-linecap="round"/>
     <path d="M8,36 Q20,26 48,36" stroke="${color}" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.7"/>`, "0 0 64 64");
 }
+
+export function getPressureIcon(color: string): string {
+    return svg(`
+        <circle cx="32" cy="32" r="18" stroke="${color}" stroke-width="2.5" fill="none"/>
+        <circle cx="32" cy="32" r="3" fill="${color}"/>
+        <path d="M32,14 L32,20" stroke="${color}" stroke-width="2" stroke-linecap="round"/>
+        <path d="M32,44 L32,50" stroke="${color}" stroke-width="2" stroke-linecap="round"/>
+        <path d="M14,32 L20,32" stroke="${color}" stroke-width="2" stroke-linecap="round"/>
+        <path d="M44,32 L50,32" stroke="${color}" stroke-width="2" stroke-linecap="round"/>
+        <path d="M32,32 L42,22" stroke="${color}" stroke-width="2" stroke-linecap="round"/>
+    `, "0 0 64 64");
+}

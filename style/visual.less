@@ -1,0 +1,338 @@
+// Weather Visual – Power BI Custom Visual Styles
+// Uses CSS custom properties injected by visual.ts
+
+.weatherVisualRoot {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    font-family: var(--wv-font-family, "Segoe UI", sans-serif);
+    box-sizing: border-box;
+
+    // ── Card ────────────────────────────────────────────────
+    .wv-card {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        border-radius: var(--wv-border-radius, 16px);
+        overflow: hidden;
+        color: var(--wv-text-color, #ffffff);
+        display: flex;
+        flex-direction: column;
+        padding: 20px 24px 16px;
+        box-sizing: border-box;
+        transition: background 0.3s ease;
+
+        &.style-glass {
+            background: rgba(var(--wv-bg-rgb, "58,90,138"), var(--wv-bg-opacity, 0.8));
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+        }
+
+        &.style-solid {
+            background: var(--wv-bg-color, #3a5a8a);
+            border: none;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        &.style-gradient {
+            background: linear-gradient(
+                135deg,
+                var(--wv-gradient-start, #3a5a8a) 0%,
+                var(--wv-gradient-end, #7b4f9e) 100%
+            );
+            border: none;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        &.style-minimal {
+            background: transparent;
+            border: 2px solid var(--wv-bg-color, #3a5a8a);
+            box-shadow: none;
+            color: var(--wv-bg-color, #3a5a8a);
+        }
+    }
+
+    // ── Header ──────────────────────────────────────────────
+    .wv-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 8px;
+        flex-shrink: 0;
+    }
+
+    .wv-location-block {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .wv-location {
+        font-size: var(--wv-location-font-size, 24px);
+        font-weight: 600;
+        line-height: 1.1;
+        letter-spacing: -0.3px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 220px;
+    }
+
+    .wv-date {
+        font-size: var(--wv-label-font-size, 13px);
+        opacity: 0.75;
+        margin-top: 3px;
+        font-weight: 400;
+    }
+
+    .wv-settings-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.5);
+        margin-top: 4px;
+        flex-shrink: 0;
+    }
+
+    // ── Current weather block ────────────────────────────────
+    .wv-current {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin: 4px 0 8px;
+        flex-shrink: 0;
+    }
+
+    .wv-current-icon {
+        flex-shrink: 0;
+
+        &.size-small  { width: 44px; height: 44px; }
+        &.size-medium { width: 56px; height: 56px; }
+        &.size-large  { width: 72px; height: 72px; }
+    }
+
+    .wv-current-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .wv-condition-label {
+        font-size: var(--wv-label-font-size, 13px);
+        opacity: 0.85;
+        font-weight: 500;
+        margin-bottom: 2px;
+    }
+
+    .wv-current-temp {
+        font-size: var(--wv-temp-font-size, 64px);
+        font-weight: 300;
+        line-height: 0.9;
+        letter-spacing: -3px;
+
+        .wv-temp-unit {
+            font-size: 0.42em;
+            font-weight: 400;
+            vertical-align: super;
+            letter-spacing: 0;
+        }
+    }
+
+    .wv-high-low {
+        font-size: var(--wv-label-font-size, 13px);
+        margin-top: 4px;
+        opacity: 0.85;
+
+        .wv-high {
+            font-weight: 600;
+        }
+
+        .wv-low {
+            color: var(--wv-accent-color, rgba(255,255,255,0.6));
+            margin-left: 4px;
+        }
+    }
+
+    // ── Extra details row ────────────────────────────────────
+    .wv-details {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 6px;
+        font-size: var(--wv-label-font-size, 13px);
+        opacity: 0.8;
+        flex-shrink: 0;
+
+        .wv-detail-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+
+            .wv-detail-icon {
+                width: 14px;
+                height: 14px;
+                flex-shrink: 0;
+            }
+        }
+    }
+
+    // ── Divider + tab bar ────────────────────────────────────
+    .wv-divider {
+        height: 1px;
+        background: var(--wv-accent-color, rgba(255,255,255,0.3));
+        margin: 6px 0;
+        flex-shrink: 0;
+    }
+
+    .wv-tab-bar {
+        display: flex;
+        gap: 20px;
+        font-size: var(--wv-label-font-size, 13px);
+        opacity: 0.7;
+        margin-bottom: 8px;
+        flex-shrink: 0;
+
+        .wv-tab {
+            cursor: default;
+            padding-bottom: 2px;
+
+            &.active {
+                opacity: 1;
+                font-weight: 600;
+                border-bottom: 2px solid var(--wv-highlight-color, #ffffff);
+            }
+        }
+    }
+
+    // ── Forecast strip ───────────────────────────────────────
+    .wv-forecast {
+        display: flex;
+        flex: 1;
+        gap: 0;
+        overflow: hidden;
+        min-height: 0;
+    }
+
+    .wv-forecast-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-end;
+        flex: 1;
+        gap: 4px;
+        padding: 4px 2px;
+        border-radius: 10px;
+        transition: background 0.15s ease;
+        min-width: 0;
+
+        &.current-slot {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .wv-slot-time {
+            font-size: var(--wv-label-font-size, 13px);
+            font-weight: 600;
+            opacity: 0.9;
+            white-space: nowrap;
+        }
+
+        .wv-slot-icon {
+            flex-shrink: 0;
+
+            &.size-small  { width: 28px; height: 28px; }
+            &.size-medium { width: 34px; height: 34px; }
+            &.size-large  { width: 42px; height: 42px; }
+        }
+
+        .wv-slot-temp {
+            font-size: calc(var(--wv-label-font-size, 13px) + 2px);
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .wv-slot-precip {
+            font-size: calc(var(--wv-label-font-size, 13px) - 1px);
+            opacity: 0.65;
+        }
+    }
+
+    // ── Daily rows ───────────────────────────────────────────
+    .wv-daily-list {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        gap: 2px;
+        overflow: hidden;
+        min-height: 0;
+    }
+
+    .wv-daily-row {
+        display: flex;
+        align-items: center;
+        padding: 4px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        flex: 1;
+        min-height: 0;
+
+        &:last-child {
+            border-bottom: none;
+        }
+
+        .wv-day-name {
+            font-size: var(--wv-label-font-size, 13px);
+            font-weight: 600;
+            width: 48px;
+            flex-shrink: 0;
+        }
+
+        .wv-day-icon {
+            flex-shrink: 0;
+            margin: 0 10px;
+
+            &.size-small  { width: 24px; height: 24px; }
+            &.size-medium { width: 30px; height: 30px; }
+            &.size-large  { width: 38px; height: 38px; }
+        }
+
+        .wv-day-condition {
+            font-size: calc(var(--wv-label-font-size, 13px) - 1px);
+            opacity: 0.75;
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .wv-day-temps {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+            font-size: var(--wv-label-font-size, 13px);
+
+            .wv-day-high { font-weight: 600; }
+            .wv-day-low  { opacity: 0.6; }
+        }
+    }
+
+    // ── No data placeholder ──────────────────────────────────
+    .wv-no-data {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        opacity: 0.55;
+        font-size: 14px;
+        text-align: center;
+        gap: 10px;
+        padding: 20px;
+
+        .wv-no-data-icon {
+            width: 48px;
+            height: 48px;
+            opacity: 0.6;
+        }
+    }
+}

@@ -1,0 +1,263 @@
+{
+  "dataRoles": [
+    {
+      "displayName": "Location",
+      "name": "location",
+      "kind": "GroupingOrMeasure",
+      "description": "City or location name (e.g. San Francisco)"
+    },
+    {
+      "displayName": "Date / Time",
+      "name": "dateTime",
+      "kind": "GroupingOrMeasure",
+      "description": "Date or datetime for each weather entry"
+    },
+    {
+      "displayName": "Temperature",
+      "name": "temperature",
+      "kind": "Measure",
+      "description": "Current temperature reading"
+    },
+    {
+      "displayName": "High Temperature",
+      "name": "highTemp",
+      "kind": "Measure",
+      "description": "Daily high temperature"
+    },
+    {
+      "displayName": "Low Temperature",
+      "name": "lowTemp",
+      "kind": "Measure",
+      "description": "Daily low temperature"
+    },
+    {
+      "displayName": "Weather Condition",
+      "name": "condition",
+      "kind": "GroupingOrMeasure",
+      "description": "Weather condition text (e.g. Sunny, Cloudy, Rainy)"
+    },
+    {
+      "displayName": "Precipitation (%)",
+      "name": "precipitation",
+      "kind": "Measure",
+      "description": "Chance of precipitation as a percentage"
+    },
+    {
+      "displayName": "Humidity (%)",
+      "name": "humidity",
+      "kind": "Measure",
+      "description": "Relative humidity percentage"
+    },
+    {
+      "displayName": "Wind Speed",
+      "name": "windSpeed",
+      "kind": "Measure",
+      "description": "Wind speed (mph or km/h depending on unit setting)"
+    }
+  ],
+  "dataViewMappings": [
+    {
+      "table": {
+        "rows": {
+          "select": [
+            { "for": { "in": "location" } },
+            { "for": { "in": "dateTime" } },
+            { "for": { "in": "temperature" } },
+            { "for": { "in": "highTemp" } },
+            { "for": { "in": "lowTemp" } },
+            { "for": { "in": "condition" } },
+            { "for": { "in": "precipitation" } },
+            { "for": { "in": "humidity" } },
+            { "for": { "in": "windSpeed" } }
+          ],
+          "dataReductionAlgorithm": {
+            "top": { "count": 168 }
+          }
+        }
+      }
+    }
+  ],
+  "objects": {
+    "displaySettings": {
+      "displayName": "Display",
+      "properties": {
+        "viewMode": {
+          "displayName": "View Mode",
+          "description": "Choose hourly (single day) or daily (week) view",
+          "type": {
+            "enumeration": [
+              { "displayName": "Hourly", "value": "hourly" },
+              { "displayName": "Daily", "value": "daily" }
+            ]
+          }
+        },
+        "temperatureUnit": {
+          "displayName": "Temperature Unit",
+          "type": {
+            "enumeration": [
+              { "displayName": "Fahrenheit (°F)", "value": "F" },
+              { "displayName": "Celsius (°C)", "value": "C" }
+            ]
+          }
+        },
+        "hoursToShow": {
+          "displayName": "Hourly Slots to Show",
+          "description": "Number of hourly time slots displayed (2–12)",
+          "type": { "numeric": true }
+        },
+        "daysToShow": {
+          "displayName": "Days to Show",
+          "description": "Number of days shown in daily view (2–14)",
+          "type": { "numeric": true }
+        },
+        "showLocation": {
+          "displayName": "Show Location Name",
+          "type": { "bool": true }
+        },
+        "showDate": {
+          "displayName": "Show Date",
+          "type": { "bool": true }
+        },
+        "showHighLow": {
+          "displayName": "Show High / Low",
+          "type": { "bool": true }
+        },
+        "showPrecipitation": {
+          "displayName": "Show Precipitation",
+          "type": { "bool": true }
+        },
+        "showHumidity": {
+          "displayName": "Show Humidity",
+          "type": { "bool": true }
+        },
+        "showWindSpeed": {
+          "displayName": "Show Wind Speed",
+          "type": { "bool": true }
+        }
+      }
+    },
+    "colorSettings": {
+      "displayName": "Colors",
+      "properties": {
+        "backgroundColor": {
+          "displayName": "Background Color",
+          "type": { "fill": { "solid": { "color": true } } }
+        },
+        "backgroundOpacity": {
+          "displayName": "Background Opacity (%)",
+          "type": { "numeric": true }
+        },
+        "textColor": {
+          "displayName": "Text Color",
+          "type": { "fill": { "solid": { "color": true } } }
+        },
+        "accentColor": {
+          "displayName": "Accent / Divider Color",
+          "type": { "fill": { "solid": { "color": true } } }
+        },
+        "highlightColor": {
+          "displayName": "Current / Highlight Color",
+          "type": { "fill": { "solid": { "color": true } } }
+        },
+        "cardStyle": {
+          "displayName": "Card Style",
+          "type": {
+            "enumeration": [
+              { "displayName": "Glass (Blur)", "value": "glass" },
+              { "displayName": "Solid", "value": "solid" },
+              { "displayName": "Gradient", "value": "gradient" },
+              { "displayName": "Minimal", "value": "minimal" }
+            ]
+          }
+        },
+        "gradientStartColor": {
+          "displayName": "Gradient Start Color",
+          "type": { "fill": { "solid": { "color": true } } }
+        },
+        "gradientEndColor": {
+          "displayName": "Gradient End Color",
+          "type": { "fill": { "solid": { "color": true } } }
+        },
+        "borderRadius": {
+          "displayName": "Corner Radius (px)",
+          "type": { "numeric": true }
+        }
+      }
+    },
+    "iconSettings": {
+      "displayName": "Icons",
+      "properties": {
+        "showIcons": {
+          "displayName": "Show Weather Icons",
+          "type": { "bool": true }
+        },
+        "iconSet": {
+          "displayName": "Icon Style",
+          "description": "Choose the visual style of weather icons",
+          "type": {
+            "enumeration": [
+              { "displayName": "Colorful", "value": "colorful" },
+              { "displayName": "Monochrome", "value": "monochrome" },
+              { "displayName": "Outlined", "value": "outlined" },
+              { "displayName": "Filled", "value": "filled" }
+            ]
+          }
+        },
+        "iconSize": {
+          "displayName": "Icon Size",
+          "type": {
+            "enumeration": [
+              { "displayName": "Small", "value": "small" },
+              { "displayName": "Medium", "value": "medium" },
+              { "displayName": "Large", "value": "large" }
+            ]
+          }
+        },
+        "sunColor": {
+          "displayName": "Sun Color",
+          "type": { "fill": { "solid": { "color": true } } }
+        },
+        "cloudColor": {
+          "displayName": "Cloud Color",
+          "type": { "fill": { "solid": { "color": true } } }
+        },
+        "rainColor": {
+          "displayName": "Rain / Snow Color",
+          "type": { "fill": { "solid": { "color": true } } }
+        }
+      }
+    },
+    "fontSettings": {
+      "displayName": "Font",
+      "properties": {
+        "fontFamily": {
+          "displayName": "Font Family",
+          "type": {
+            "enumeration": [
+              { "displayName": "Segoe UI", "value": "Segoe UI, sans-serif" },
+              { "displayName": "Arial", "value": "Arial, sans-serif" },
+              { "displayName": "Helvetica", "value": "Helvetica Neue, sans-serif" },
+              { "displayName": "Georgia", "value": "Georgia, serif" },
+              { "displayName": "Courier", "value": "Courier New, monospace" }
+            ]
+          }
+        },
+        "currentTempSize": {
+          "displayName": "Current Temp Font Size (px)",
+          "type": { "numeric": true }
+        },
+        "locationFontSize": {
+          "displayName": "Location Font Size (px)",
+          "type": { "numeric": true }
+        },
+        "labelFontSize": {
+          "displayName": "Label Font Size (px)",
+          "type": { "numeric": true }
+        }
+      }
+    }
+  },
+  "privileges": [],
+  "supportsHighlight": false,
+  "suppressDefaultTitle": true
+}

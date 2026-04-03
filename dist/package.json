@@ -1,0 +1,17 @@
+{
+		"version": "1.0.0.0",
+		"author": {"name":"hoptonsimon","email":"hoptonsimon@users.noreply.github.com"},
+		"resources": [
+			{
+				"resourceId": "rId0",
+				"sourceType": 5,
+				"file": "resources/weatherVisual4A2F9B1C3D5E6F7A8B9C0D1E2F3A4B5C.pbiviz.json"
+			}
+		],
+		"visual": {"name":"weatherVisual","displayName":"Weather Visual","guid":"weatherVisual4A2F9B1C3D5E6F7A8B9C0D1E2F3A4B5C","visualClassName":"WeatherVisual","version":"1.0.0.0","description":"Display weather forecasts with hourly and daily views, customizable icons and colors","supportUrl":"https://github.com/hoptonsimon/hoptonsimon","gitHubUrl":"https://github.com/hoptonsimon/hoptonsimon"},
+		"metadata": {
+			"pbivizjson": {
+				"resourceId": "rId0"
+			}
+		}
+	}

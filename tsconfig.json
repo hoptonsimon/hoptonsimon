@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "allowJs": false,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "target": "ES6",
+    "sourceMap": true,
+    "outDir": "./.tmp/build/",
+    "moduleResolution": "node",
+    "declaration": false,
+    "lib": ["es2015", "dom", "ES2015.Promise"],
+    "strict": false,
+    "noImplicitAny": false
+  },
+  "files": [
+    "./src/visual.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
